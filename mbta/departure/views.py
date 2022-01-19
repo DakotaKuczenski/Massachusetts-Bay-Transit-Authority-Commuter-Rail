@@ -71,7 +71,7 @@ def apiResponseFormat(data):
                 "next departure": departureTime,
                 "status": status,
                 "Train Number": vehicle,
-                "track": trainTrack,
+                "track number": trainTrack,
             }
             responseData["departure"].append(returned)
 
