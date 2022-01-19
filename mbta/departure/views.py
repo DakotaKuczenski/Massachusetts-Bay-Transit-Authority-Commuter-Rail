@@ -24,6 +24,7 @@ def apiResponseFormat(data):
     allTrips = []
     allStops = []
     allSchedules = []
+    allRoute = []
 
     for i in info:
         if i["type"] == "trip":
@@ -32,6 +33,8 @@ def apiResponseFormat(data):
             allSchedules.append(i)
         elif i["type"] == "stop":
             allStops.append(i)
+        elif i["type"] == "route":
+            allRoute.append(i)
 
     for ride in departureInfo:
         if (
@@ -46,6 +49,7 @@ def apiResponseFormat(data):
             returned = {}
 
             stopInfo = disection(allStops, stopID)
+            routeInfo = disection(allRoute, routeID)
             trainTrack = stopInfo.get("attributes")["platform_code"]
             tripID = ride.get("relationships")["trip"]["data"]["id"]
             tripInfo = disection(allTrips, tripID)
@@ -56,7 +60,7 @@ def apiResponseFormat(data):
             status = ride.get("attributes")["status"]
             destination = ride.get("relationships")["route"]["data"]["id"]
             stopID = ride.get("relationships")["stop"]["data"]["id"]
-            routeID = ride.get("relationships")["route"]["data"]["id"]
+            routeID = routeInfo.get("relationships")["route"]["data"]["id"]
 
             if trainTrack is None:
                 trainTrack = "None"
@@ -95,5 +99,6 @@ def commuterRail(request):
 
 def home(request):
     return render(request, "home.html")
+
 
 
