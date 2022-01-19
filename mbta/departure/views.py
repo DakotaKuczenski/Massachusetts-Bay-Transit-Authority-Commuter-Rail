@@ -68,7 +68,7 @@ def apiResponseFormat(data):
             returned = {
                 "route_ID": destination,
                 "destination": name,
-                "departure_time": departureTime,
+                "next departure": departureTime,
                 "status": status,
                 "Train Number": vehicle,
                 "track": trainTrack,
