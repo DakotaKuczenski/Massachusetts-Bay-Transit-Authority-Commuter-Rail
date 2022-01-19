@@ -58,7 +58,7 @@ def apiResponseFormat(data):
             stopID = ride.get("relationships")["stop"]["data"]["id"]
             routeID = ride.get("relationships")["route"]["data"]["id"]
 
-            if not trainTrack:
+            if trainTrack is None:
                 trainTrack = "None"
 
             returned = {
