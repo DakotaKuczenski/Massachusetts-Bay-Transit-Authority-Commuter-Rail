@@ -2,43 +2,98 @@ from django.shortcuts import render
 from django.http import HttpResponse, response, JsonResponse
 import requests
 from requests.api import request
-import json
-from functools import wraps
-import logging 
+from django.conf import settings
+import logging
+
+# logger = logging.getLogger(__name__)                                                  # *logger is not configured*
 
 
-# logger = logging.getLogger(__name__)                                                  # logger is not configured*
+def disection(dataList, objectID):
+    for x in dataList:
+        if x.get("id") == objectID:
+            return x
+    return None
 
-                                                             
-def commuterRail(request): 
 
-    if request.method != "GET":
-        message = 'request is invalid'                                                  # log this when going into prod
-        explanation = 'Server could not accept request, "GET" request required'
-        return JsonResponse({'message': message, 'explanation' : explanation})
+def apiResponseFormat(data):
+    info = data.get("included")
+    departureInfo = data.get("data")
+    responseData = {}
+    responseData["departure"] = []
+    parseDepart = []
+    allTrips = []
+    allStops = []
+    allSchedules = []
 
-    try:  
-        response = requests.get('https://api-v3.mbta.com/routes?filter[type]=2')
+    for i in info:
+        if i["type"] == "trip":
+            allTrips.append(i)
+        elif i["type"] == "schedule":
+            allSchedules.append(i)
+        elif i["type"] == "stop":
+            allStops.append(i)
 
-        if response.status_code != 200: 
-            # logger.error("Not 200, error.")
-            message = 'request is invalid'                                              # log this when going into prod, would also check for other status codes like 400/500
-            explanation = 'Server could not accept request, returned bad status'        # to tell if error occured client or server side. <=400 & <=500
-            return JsonResponse({'message': message, 'explanation' : explanation})
+    for ride in departureInfo:
+        if (
+            ride.get("attributes")["departure_time"]
+            and not ride.get("attributes")["arrival_time"]
+        ):
+            parseDepart.append(ride)
 
-        json_list = []
-        x = json.loads(response.text)
-        for i in range(0, len(x['data'])):
-            json_list.append(x['data'][i]['attributes'])
-        return render(request, 'commuterRail.html',{'res': json_list})
+    if parseDepart:
+        for ride in parseDepart:
+
+            returned = {}
+
+            stopInfo = disection(allStops, stopID)
+            trainTrack = stopInfo.get("attributes")["platform_code"]
+            tripID = ride.get("relationships")["trip"]["data"]["id"]
+            tripInfo = disection(allTrips, tripID)
+            vehicle = tripInfo.get("attributes")["name"]
+            scheduleID = ride.get("relationships")["schedule"]["data"]["id"]
+            scheduleInfo = disection(allSchedules, scheduleID)
+            departureTime = scheduleInfo.get("attributes")["departure_time"]
+            status = ride.get("attributes")["status"]
+            destination = ride.get("relationships")["route"]["data"]["id"]
+            stopID = ride.get("relationships")["stop"]["data"]["id"]
+            routeID = ride.get("relationships")["route"]["data"]["id"]
+
+            if not trainTrack:
+                trainTrack = "None"
+
+            returned = {
+                "route_ID": routeID,
+                "destination": destination,
+                "departure_time": departureTime,
+                "status": status,
+                "Train Number": vehicle,
+                "track": trainTrack,
+            }
+            responseData["departure"].append(returned)
+
+    return responseData
+
+
+def commuterRail(request):
+    # only north station
+    try:
+        url = "https://api-v3.mbta.com/predictions?filter[stop]=place-north&filter[route_type]=2&include=stop,trip,schedule"
+        response = requests.get(url)
+        data = response.json()
+        data = apiResponseFormat(data)
+
+        x = []
+        for i in range(0, len(data["departure"])):
+            x.append(data["departure"][i])
     except Exception as error:
-        error = 'Something went wrong'
-        print('Caught error: ' + repr(error))
-        
+        error = "Issue has occured"
+        # logger.error("error")
+        print("caught a error: " + repr(error))
+
+    return render(request, "commuterRail.html", {"res": x})
 
 
 def home(request):
-    return render(request, 'home.html')
-
+    return render(request, "home.html")
 
 
