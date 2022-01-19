@@ -64,7 +64,7 @@ def apiResponseFormat(data):
                 trainTrack = "None"
 
             returned = {
-                "route_ID": routeID,
+                "route_ID": tripID,
                 "destination": destination,
                 "departure_time": departureTime,
                 "status": status,
