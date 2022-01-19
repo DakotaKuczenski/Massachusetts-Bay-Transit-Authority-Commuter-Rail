@@ -24,7 +24,6 @@ def apiResponseFormat(data):
     allTrips = []
     allStops = []
     allSchedules = []
-    allRoute = []
 
     for i in info:
         if i["type"] == "trip":
