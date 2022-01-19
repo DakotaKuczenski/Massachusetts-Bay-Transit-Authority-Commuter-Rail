@@ -46,12 +46,12 @@ def apiResponseFormat(data):
 
             returned = {}
 
-            routeID = ride.get("relationships")["route"]["data"]["id"]
             status = ride.get("attributes")["status"]
             destination = ride.get("relationships")["route"]["data"]["id"]
             stopID = ride.get("relationships")["stop"]["data"]["id"]
 
             stopInfo = disection(allStops, stopID)
+
             trainTrack = stopInfo.get("attributes")["platform_code"]
             tripID = ride.get("relationships")["trip"]["data"]["id"]
             tripInfo = disection(allTrips, tripID)
@@ -60,12 +60,14 @@ def apiResponseFormat(data):
             scheduleInfo = disection(allSchedules, scheduleID)
             departureTime = scheduleInfo.get("attributes")["departure_time"]
 
+            name = destination[3:]
+
             if trainTrack is None:
                 trainTrack = "None"
 
             returned = {
-                "route_ID": tripID,
-                "destination": destination,
+                "route_ID": destination,
+                "destination": name,
                 "departure_time": departureTime,
                 "status": status,
                 "Train Number": vehicle,
