@@ -24,7 +24,7 @@ def apiResponseFormat(data):
     allTrips = []
     allStops = []
     allSchedules = []
-    allRoute = []
+    # allRoute = []
 
     for i in info:
         if i["type"] == "trip":
@@ -33,8 +33,8 @@ def apiResponseFormat(data):
             allSchedules.append(i)
         elif i["type"] == "stop":
             allStops.append(i)
-        elif i["type"] == "route":
-            allRoute.append(i)
+        # elif i["type"] == "route":
+        #    allRoute.append(i)
 
     for ride in departureInfo:
         if (
@@ -48,8 +48,12 @@ def apiResponseFormat(data):
 
             returned = {}
 
+            status = ride.get("attributes")["status"]
+            destination = ride.get("relationships")["route"]["data"]["id"]
+            stopID = ride.get("relationships")["stop"]["data"]["id"]
+
             stopInfo = disection(allStops, stopID)
-            routeInfo = disection(allRoute, routeID)
+            # routeInfo = disection(allRoute, routeID)
             trainTrack = stopInfo.get("attributes")["platform_code"]
             tripID = ride.get("relationships")["trip"]["data"]["id"]
             tripInfo = disection(allTrips, tripID)
@@ -57,16 +61,14 @@ def apiResponseFormat(data):
             scheduleID = ride.get("relationships")["schedule"]["data"]["id"]
             scheduleInfo = disection(allSchedules, scheduleID)
             departureTime = scheduleInfo.get("attributes")["departure_time"]
-            status = ride.get("attributes")["status"]
-            destination = ride.get("relationships")["route"]["data"]["id"]
-            stopID = ride.get("relationships")["stop"]["data"]["id"]
-            routeID = routeInfo.get("relationships")["route"]["data"]["id"]
+
+            # routeID = routeInfo.get("relationships")["route"]["data"]["id"]
 
             if trainTrack is None:
                 trainTrack = "None"
 
             returned = {
-                "route_ID": routeID,
+                "route_ID": tripID,
                 "destination": destination,
                 "departure_time": departureTime,
                 "status": status,
@@ -80,25 +82,19 @@ def apiResponseFormat(data):
 
 def commuterRail(request):
     # only north station
-    try:
-        url = "https://api-v3.mbta.com/predictions?filter[stop]=place-north&filter[route_type]=2&include=stop,trip,schedule"
-        response = requests.get(url)
-        data = response.json()
-        data = apiResponseFormat(data)
 
-        x = []
-        for i in range(0, len(data["departure"])):
-            x.append(data["departure"][i])
-    except Exception as error:
-        error = "Issue has occured"
-        # logger.error("error")
-        print("caught a error: " + repr(error))
+    url = "https://api-v3.mbta.com/predictions?filter[stop]=place-north&filter[route_type]=2&include=stop,trip,schedule"
+    response = requests.get(url)
+    data = response.json()
+    data = apiResponseFormat(data)
+
+    x = []
+    for i in range(0, len(data["departure"])):
+        x.append(data["departure"][i])
 
     return render(request, "commuterRail.html", {"res": x})
 
 
 def home(request):
     return render(request, "home.html")
-
-
 
